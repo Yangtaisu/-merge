@@ -1,16 +1,216 @@
 ---
-title: "Select"
-subtitle: "select"
-author: "really3Q"
+title: "The Causes of Death in the World"
+subtitle: "Really3Q"
+author: "JingyiShi MiaoSun JingwenOu YuQin"
 institute: "Department of Econometrics and Business Statistics"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: css/style.css
     yolo: FALSE
 ---
 
-
 ```{r setup, include=FALSE}
 options(htmltools.dir.version = FALSE)
+```
+
+```{r , echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(knitr)
+library(plotly)
+library(gganimate)
+library(gifski)
+library(DT)
+```
+
+```{r,  echo = FALSE, message = FALSE, warning = FALSE}
+annual_number_of_deaths_by_cause <- read_csv("Data/annual-number-of-deaths-by-cause.csv", 
+    col_types = cols(`Number of executions` = col_double()))
+life_expectancy <- read_csv("Data/life-expectancy.csv")
+share_with_depression <- read_csv("Data/share-with-depression.csv")
+```
+
+```{r , echo = FALSE, message = FALSE, warning = FALSE}
+world_data <-annual_number_of_deaths_by_cause %>% 
+  filter(!is.na(Code),
+         Year %in% c(1990:2018)) %>%
+  pivot_longer(cols =  -c(1:3), 
+               names_to = "Death_cause", 
+               values_to = "Count") %>% 
+  group_by(Year,Death_cause) %>% 
+  summarise(Death_amount=sum(Count, na.rm = TRUE))
+
+p1 <- ggplot(world_data,
+       mapping = aes(x=Year,
+                     y=Death_amount,
+                     color=Death_cause))+
+  geom_line()+
+  theme_bw()
+
+disease_data <- annual_number_of_deaths_by_cause %>% 
+  select(1,3,5,6,7,8,9,12,13,14,15,16,17,18,22,24,26,27,32,33,34,36) %>% 
+  filter(Country %in% c("Australia","Switzerland"),
+         Year %in% c(1990:2018)) %>% 
+  pivot_longer(cols =  -c(1:3), 
+               names_to = "Death_cause", 
+               values_to = "Count")
+
+AZ_life_expectancy <- life_expectancy %>% filter(
+  Entity %in% c("Australia","Switzerland"),
+  Year %in% c(1990:2018)
+) %>% 
+  rename("Country" = "Entity",
+         "Life_expectancy" = "Life expectancy") %>% 
+  select(-Code)
+
+DL_data <- disease_data %>% 
+  left_join(AZ_life_expectancy,by=c("Country","Year"))
+
+p2 <-ggplot(DL_data,
+       mapping = aes(x=Year,
+                     y=Count,
+                     color=Death_cause))+
+  geom_line()+
+    facet_wrap(~Country,
+             scales = "free_y")+
+  theme_bw()
+
+p3 <-ggplot(DL_data,
+       mapping = aes(x=Year,
+                     y=Count,
+                     color=Death_cause))+
+  geom_line()+
+  geom_line(aes(y=Life_expectancy*500),
+            color="#1CDC4B",
+            size=1)+
+  geom_point(aes(y=Life_expectancy*500),
+             color="#12F09E",
+             size=1)+
+    scale_y_continuous(name = "Number of deaths by disease causes",
+    sec.axis = sec_axis(trans =~./500,
+                        name = "Life expectancy"))+
+    facet_wrap(~Country,
+             scales = "free_y")+
+  theme_bw()
+
+other_data <- annual_number_of_deaths_by_cause %>% 
+  select(1,3,4,10,11,19,20,21,23,25,28,29,30,31,35) %>% 
+  filter(Country %in% c("Australia","Switzerland"),
+         Year %in% c(1990:2018)) %>% 
+  pivot_longer(cols =  -c(1:3), 
+               names_to = "Death_cause", 
+               values_to = "Count")
+
+
+AZ_share_with_depression <-share_with_depression  %>% filter(
+  Entity %in% c("Australia","Switzerland"),
+  Year %in% c(1990:2018)
+) %>% 
+  rename("Country" = "Entity",
+         "Depressive_disorders" = "Depressive disorders") %>% 
+  select(-Code)
+
+DD_data <- other_data %>% 
+  left_join(AZ_share_with_depression,by=c("Country","Year"))
+
+p4 <- ggplot(DD_data,
+       mapping = aes(x=Year,
+                     y=Count,
+                     color=Death_cause))+
+  geom_line()+
+  facet_wrap(~Country,
+             scales = "free_y")+
+  theme_bw()
+
+
+
+```
+
+```{r eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE}
+world_data_arrange <- world_data %>% 
+  group_by(Year) %>% 
+  arrange(Year, desc(Death_amount)) %>% 
+  mutate(ranking = row_number()) 
+```
+background:DBE6B4
+background-size: cover
+--
+## Death Causes since 1990
+--
+```{r eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '80%'}
+ggplot(world_data_arrange,
+       aes(x = ranking,
+           y = Death_amount)) +
+  geom_col(aes(fill = Death_cause)) +
+  geom_text(aes(label = Death_amount), hjust = -0.1) +
+  geom_text(aes(y = 0, label = Death_cause), hjust = 1.1) +
+  coord_flip(clip = "off") +
+  scale_x_reverse() +
+  theme_void() +
+  theme(
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    legend.position = 'none',
+    plot.margin = margin(1, 4, 1, 3, "cm")) +
+  labs(title = 'Year: {closest_state}', y = "Number of deaths by cause", x="") +
+  transition_states(Year) +
+  enter_fade() +
+  exit_fade() +
+  ease_aes('quadratic-in-out') 
+```
+
+---
+## Number of Deaths by Causes, World, 1990 to 2019.
+--
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '120%' }
+ggplotly(p1)
+```
+---
+class: inverse 
+## Interested Country: Australia and Switzerland
+
+<br>
+<br>
+--
+**Q1: What can be observed in the chart of causes of death due to disease?**
+<br>
+<br>
+--
+**Q2: What can be observed in the chart of causes of death due to others?**
+---
+## Number of deaths by disease causes in Australia and Switzerland.
+--
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '120%' }
+ggplotly(p2)
+```
+---
+## Life Expectancy in Australia and Switzerland 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '80%', }
+life_table <- life_expectancy %>% 
+  filter(
+  Year %in% (1990:2018),
+  Entity %in% c("Australia","Switzerland")
+)
+datatable(life_table)
+```
+---
+## Add a line of life expectancy
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",fig.width=6.8,fig.height=3.7 }
+knitr::include_graphics("figs/Rplot.png")
+```
+
+---
+## Number of deaths by other causes in Australia and Switzerland.
+--
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '120%' }
+ggplotly(p4)
+```
+---
+## 2009Black Saturday bushfires
+
+The Black Saturday bushfires were a series of bushfires that either ignited or were already burning across the Australian state of Victoria on and around Saturday, 7 February 2009, and were among Australia's all-time worst bushfire disasters. 
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.align="center",out.width = '100%'}
+knitr::include_graphics("figs/fire.jpg")
 ```
