@@ -1,0 +1,16 @@
+---
+title: "Select"
+subtitle: "select"
+author: "really3Q"
+institute: "Department of Econometrics and Business Statistics"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: css/style.css
+    yolo: FALSE
+---
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
