@@ -1,7 +1,7 @@
 ---
-title: "Select"
-subtitle: "select"
-author: "really3Q"
+title: "The Causes of Death in the World"
+subtitle: "Really3Q"
+author: "JingyiShi MiaoSun JingwenOu YuQin"
 institute: "Department of Econometrics and Business Statistics"
 output:
   xaringan::moon_reader:
