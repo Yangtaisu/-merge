@@ -378,7 +378,7 @@ datatable(CI_model_fitness)
 
 #### For every 1 unit of gdppc increase, the number of death caused by the deceased will increase by the number of the slope.
 
-#### R^2 means the percentage of variability observed in the target variable is explained by the regression model.
+#### R^2 means the percentage of variability observed in the target variable is explained by the regression model..
 
 
 
